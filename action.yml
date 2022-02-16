@@ -15,6 +15,16 @@ inputs:
   xcconfig:
     description: "The path to a .xcconfig file that can be used to override Xcode build settings. Relative to the package path."
     required: false
+  zip-version:
+    description: "The version number to append to the name of the zip file."
+    required: false
+  upload-to-artifacts:
+    description: "Boolean value indicating whether to upload the output files to Github artifacts or not. Default is 'false'."
+    default: false
+    required: false
+  zip-checksum-output-path:
+    description: "A path where to save the output fiels locally for later usage."
+    required: false
 
 runs:
   using: node12

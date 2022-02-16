@@ -5,7 +5,7 @@ const artifact = require('././.action/artifact')
 const fs = require('fs')
 
 const scxVersion = 'v2.1.0'
-const outputPath = '.build/xcframework-zipfile.url'
+const mergedFilesPath = '.build/xcframework-zipfile.url'
 
 core.setCommandEcho(true)
 
@@ -16,6 +16,10 @@ async function run() {
         let configuration = core.getInput('configuration', { required: false })
         let platforms = core.getInput('platforms', { required: false })
         let xcconfig = core.getInput('xcconfig', { required: false })
+        let zipVersion = core.getInput('zip-version', { required: false })
+        let zipAndChecksumOutputPath = core.getInput('zip-checksum-output-path', { required: false })
+        let uploadToArtifacts = core.getInput('upload-to-artifacts', { required: false })
+
 
         // install mint if its not installed
         await installUsingBrewIfRequired("mint")
@@ -60,17 +64,43 @@ async function run() {
                 })
         }
 
+        if (!!zipVersion) {
+            options.push('--zip-version')
+            options.push(zipVersion)
+        }
+
         await runUsingMint('swift-create-xcframework', options)
 
         let client = artifact.create()
-        let files = fs.readFileSync(outputPath, { encoding: 'utf8' })
+        let filesPaths = fs.readFileSync(mergedFilesPath, { encoding: 'utf8' })
             .split('\n')
-            .map((file) => file.trim())
+            .map((filePath) => filePath.trim())
 
-        for (var i = 0, c = files.length; i < c; i++) {
-            let file = files[i]
-            let name = path.basename(file)
-            await client.uploadArtifact(name, [file], path.dirname(file))
+        for (var i = 0, c = filesPaths.length; i < c; i++) {
+            let filePath = filesPaths[i]
+            let filename = path.basename(filePath)
+
+            // Upload the files to Github artifacts if the `uploadArtifact` is true.
+            if (uploadToArtifacts === 'true') {
+                await client.uploadArtifact(filename, [filePath], path.dirname(filePath))
+            }
+            
+            // Copy the files to `zipAndChecksumOutputPath` if it has value.
+            if (zipAndChecksumOutputPath) {
+                let dirname = "./" + zipAndChecksumOutputPath
+                let newFilePath = dirname + "/" + filename
+                // Create directories recursively if not exist
+                if (!fs.existsSync(dirname)) {
+                    fs.mkdirSync(dirname, { recursive: true })
+                }
+                // Copy the file
+                await fs.copyFile(filePath, newFilePath, function(err, result) {
+                    if(err) {
+                        return core.info("Failed to save file '" + filename + "' locally at path '" + zipAndChecksumOutputPath + "' with error: " + err);
+                    }
+                    core.info("File '"+ filename + "' saved locally successfully at path '" + zipAndChecksumOutputPath + "'");
+                });
+            }
         }
 
     } catch (error) {

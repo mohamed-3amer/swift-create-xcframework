@@ -1,3 +1,9 @@
+# Fork Updates
+
+- Added `zip-version` to the Github Action inputs to be append to the name of the zip file and the checksum file.
+- Added `upload-to-artifacts` Boolean to the Github Action inputs to indicate whether to upload the output files to Github artifacts or not. Default is 'false'.
+- Added `zip-checksum-output-path` to the Github Action inputs to define where to save the output files locally for later usage.
+
 # swift-create-xcframework
 
 swift-create-xcframework is a very simple tool designed to wrap `xcodebuild` and the process of creating multiple frameworks for a Swift Package and merging them into a single XCFramework.
@@ -33,8 +39,8 @@ Let's use an example `Package.swift`:
 var package = Package(
     name: "example-generator",
     platforms: [
-	    .ios(.v12),
-    	 .macos(.v10_12)
+      .ios(.v12),
+       .macos(.v10_12)
     ],
     products: [
         .library(
@@ -43,8 +49,8 @@ var package = Package(
     ],
     dependencies: [],
     targets: [
-		...
-	]
+    ...
+  ]
 )
 ```
 
@@ -135,6 +141,15 @@ jobs:
       # Create a release
       # Upload those artifacts to the release
 ```
+
+### Action Inputs
+- **target**: The name of the target(s) you want to create an XCFramework bundle for. One artifact will be uploaded for each target. Separate target names with commas.
+- **platforms**: The platform(s) that you want to build for. Default is to build for all platforms supported in your Package.swift, or all Apple platforms if omited. Comma-delimited string supported.
+- **configuration**: Build with a specific configuration ('debug' or 'release'). Default is 'release'.
+- **xcconfig**: The path to a .xcconfig file that can be used to override Xcode build settings. Relative to the package path.
+- **zip-version**: The version number to append to the name of the zip file.
+- **upload-to-artifacts**: Boolean value indicating whether to upload the output files to Github artifacts or not. Default is 'false'.
+- **zip-checksum-output-path**: A path where to save the output files locally for later usage.
 
 ## Installation
 
